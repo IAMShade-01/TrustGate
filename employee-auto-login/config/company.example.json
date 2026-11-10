@@ -1,0 +1,16 @@
+{
+  "companyName": "Example Company",
+  "apiEndpoint": "https://api.example.com/login",
+  "credentialStorage": {
+    "type": "secure",
+    "location": "C:\\ProgramData\\EmployeeAutoLogin\\credentials.json"
+  },
+  "logging": {
+    "enabled": true,
+    "logFile": "C:\\ProgramData\\EmployeeAutoLogin\\logs\\login-audit.log"
+  },
+  "retryPolicy": {
+    "maxRetries": 3,
+    "retryDelay": 5000
+  }
+}
