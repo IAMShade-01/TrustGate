@@ -18,6 +18,12 @@ The Software Deployment page checks the configured Docker daemon, lists installe
 
 Select **Edit page** on the dashboard to add, remove, or reorder widgets using the dropdown. The **Plugin Marketplace** lists the built-in widgets and can add or remove them from the dashboard. Layouts are saved per Windows user in `%LOCALAPPDATA%\TrustGate\dashboard.json` (or `~/.local/share/TrustGate/dashboard.json` when `LOCALAPPDATA` is unavailable). The marketplace does not download or execute third-party plugins. These are local preferences, not department-wide layouts or administrator-enforced permissions; the other enterprise integrations and page-builder features in the plan are not yet implemented.
 
+## Company Profile Manager
+
+The Company Profiles page creates, edits, clones, and switches local profiles. The active profile is the default for AutoLogon and new deployment previews; switching does not apply changes to Windows or directory services. Local profiles and the active selection are stored in plaintext under `%LOCALAPPDATA%\TrustGate`; do not store passwords or other secrets in profiles.
+
+Export and backup both save a single passphrase-encrypted `.tgprofile` file using scrypt and AES-256-GCM. Keep the passphrase safe: it is not saved and cannot be recovered. Import accepts these files or an unencrypted JSON object with `name` and `profile` fields. Existing profiles are never overwritten on import; choose another name when prompted. Exported files contain only profile configuration, not Credential Manager secrets. Microsoft Entra ID authentication and access control are not connected in this version.
+
 ## Deployment UI Preview
 
 The dashboard includes a preview-only AutoLogon Manager, company presets, computer-name validation, a deployment wizard, and local JSON preview-report export. Generic presets are bundled from `config/company_profiles.default.json`. To use private company settings, place a JSON file in `%LOCALAPPDATA%\TrustGate\company_profiles.json`; it takes precedence over the bundled presets. When running from source, an untracked `config/company_profiles.json` is also supported if no per-user file exists. Neither private file is included in the executable. The preview workflow does not change Windows AutoLogon settings, join a domain, reset directory passwords, rename the computer, or deploy software, printers, or drives. The separate Software Deployment page can install Windows packages as described above. AutoLogon passwords are not saved or included in audit events or reports.

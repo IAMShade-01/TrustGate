@@ -1,14 +1,18 @@
+import copy
 import getpass
 import json
 import os
 import queue
 import threading
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 from datetime import datetime
 
 from activity_log import append_activity, read_activity
-from company_profiles import CompanyProfileError, load_company_profiles
+from company_profiles import (
+    CompanyProfileError, add_company_profile, export_company_profile, import_company_profile,
+    load_active_profile, load_company_profiles, save_active_profile, save_company_profiles,
+)
 from credential_store import CredentialStore, CredentialStoreError
 from dashboard_modules import MODULES, DashboardConfigError, DashboardStore
 from printer_requests import PrinterRequestError, PrinterRequestStore, export_request_pdf
@@ -46,8 +50,14 @@ class TrustGateApp:
         self.deployment_queue = queue.Queue()
         self.company_profiles = {}
         self.company_profile_error = None
+        self.active_company = None
+        self.company_active_error = None
         try:
             self.company_profiles = load_company_profiles()
+            try:
+                self.active_company = load_active_profile(self.company_profiles)
+            except CompanyProfileError as error:
+                self.company_active_error = str(error)
         except CompanyProfileError as error:
             self.company_profile_error = str(error)
         self.store = None
@@ -136,7 +146,7 @@ class TrustGateApp:
         if page != "AutoLogon Manager" and hasattr(self, "autologon_password"):
             self.autologon_password.set("")
             if not self.remember_autologon_settings.get():
-                self.autologon_company.set(next(iter(self.company_profiles), "Custom"))
+                self.autologon_company.set(self.active_company or next(iter(self.company_profiles), "Custom"))
                 self.autologon_username.set("")
                 self.autologon_domain.set("")
 
@@ -160,7 +170,10 @@ class TrustGateApp:
         elif page == "AutoLogon Manager":
             self.auto_logon_page()
         elif page == "Deployment Wizard":
-            self.deployment_wizard_page()
+            if not hasattr(self, "wizard_steps"):
+                self.start_deployment_wizard()
+            else:
+                self.deployment_wizard_page()
         elif page == "Password Reset":
             self.password_reset_page()
         elif page == "Printer Requests":
@@ -526,26 +539,220 @@ class TrustGateApp:
     def company_profiles_page(self):
         tk.Label(
             self.content,
-            text="Company deployment defaults",
+            text="Manage local company deployment defaults.",
             bg=BG, fg=MUTED, font=("Segoe UI", 11),
-        ).pack(anchor="w", pady=(4, 18))
+        ).pack(anchor="w", pady=(4, 12))
         if self.company_profile_error:
             self.info_page("Company profiles", self.company_profile_error)
             return
 
-        for name, profile in self.company_profiles.items():
-            panel = tk.Frame(self.content, bg=WHITE, padx=18, pady=14)
-            panel.pack(fill="x", pady=(0, 10))
-            tk.Label(panel, text=name, bg=WHITE, fg=TEXT, font=("Segoe UI", 13, "bold")).pack(anchor="w")
-            details = (
-                f"Domain: {profile['domain'] or 'Not set'}    "
-                f"Default OU: {profile['default_ou'] or 'Not set'}\n"
-                f"Printers: {', '.join(profile['printers']) or 'None'}    "
-                f"Drives: {', '.join(profile['drives']) or 'None'}"
-            )
-            tk.Label(panel, text=details, bg=WHITE, fg=MUTED, justify="left", anchor="w", wraplength=760).pack(
-                anchor="w", pady=(6, 0)
-            )
+        panel = tk.Frame(self.content, bg=WHITE, padx=18, pady=14)
+        panel.pack(fill="both", expand=True)
+        tk.Label(
+            panel, text=f"Active profile: {self.active_company or 'Not selected'}",
+            bg=WHITE, fg=TEXT, font=("Segoe UI", 12, "bold"),
+        ).pack(anchor="w")
+        if self.company_active_error:
+            tk.Label(
+                panel, text=self.company_active_error, bg=WHITE, fg="#B42318",
+                wraplength=700, justify="left",
+            ).pack(anchor="w", pady=(4, 0))
+        row = tk.Frame(panel, bg=WHITE)
+        row.pack(fill="x", pady=(12, 8))
+        tk.Label(row, text="Selected profile", bg=WHITE, fg=TEXT).pack(side="left", padx=(0, 8))
+        self.profile_selection = tk.StringVar(value=self.active_company or next(iter(self.company_profiles)))
+        picker = ttk.Combobox(
+            row, textvariable=self.profile_selection, values=tuple(self.company_profiles), state="readonly",
+        )
+        picker.pack(side="left", fill="x", expand=True)
+        picker.bind("<<ComboboxSelected>>", self._show_profile_details)
+        ttk.Button(row, text="Switch profile", command=self.switch_company_profile).pack(side="left", padx=(8, 0))
+
+        self.profile_details = tk.Label(
+            panel, bg=WHITE, fg=MUTED, justify="left", anchor="nw", wraplength=700,
+        )
+        self.profile_details.pack(fill="x", pady=(0, 12))
+        self._show_profile_details()
+        actions = tk.Frame(panel, bg=WHITE)
+        actions.pack(fill="x")
+        for label, command in (
+            ("Create", lambda: self.edit_company_profile()),
+            ("Edit", lambda: self.edit_company_profile(self.profile_selection.get())),
+            ("Clone", self.clone_company_profile),
+            ("Import", self.import_company_profile_dialog),
+        ):
+            ttk.Button(actions, text=label, command=command).pack(side="left", padx=(0, 6))
+        transfer = tk.Frame(panel, bg=WHITE)
+        transfer.pack(fill="x", pady=(8, 0))
+        for label, command in (
+            ("Export encrypted", lambda: self.export_company_profile_dialog(False)),
+            ("Backup encrypted", lambda: self.export_company_profile_dialog(True)),
+        ):
+            ttk.Button(transfer, text=label, command=command).pack(side="left", padx=(0, 6))
+        tk.Label(
+            panel,
+            text="Exports and backups require a passphrase. Local profiles are not encrypted. "
+                 "Microsoft Entra ID access control is not connected.",
+            bg=WHITE, fg=MUTED, wraplength=700, justify="left",
+        ).pack(anchor="w", pady=(16, 0))
+
+    def _show_profile_details(self, _event=None):
+        profile = self.company_profiles[self.profile_selection.get()]
+        self.profile_details.configure(text=(
+            f"Domain: {profile['domain'] or 'Not set'}\n"
+            f"Default OU: {profile['default_ou'] or 'Not set'}\n"
+            f"Printers: {', '.join(profile['printers']) or 'None'}\n"
+            f"Drives: {', '.join(profile['drives']) or 'None'}"
+        ))
+
+    def _save_company_profiles(self, updated, parent=None):
+        try:
+            if load_company_profiles() != self.company_profiles:
+                raise CompanyProfileError(
+                    "Company profiles changed outside this window. Restart TrustGate before saving."
+                )
+            save_company_profiles(updated)
+        except CompanyProfileError as error:
+            messagebox.showerror("Could not save company profiles", str(error), parent=parent or self.root)
+            return False
+        self.company_profiles = updated
+        return True
+
+    def edit_company_profile(self, name=None):
+        profile = copy.deepcopy(self.company_profiles[name]) if name is not None else {}
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Edit Company Profile" if name is not None else "Create Company Profile")
+        dialog.transient(self.root)
+        dialog.grab_set()
+        form = ttk.Frame(dialog, padding=18)
+        form.pack(fill="both", expand=True)
+        form.columnconfigure(1, weight=1)
+        name_var = tk.StringVar(value=name or "")
+        domain_var = tk.StringVar(value=profile.get("domain", ""))
+        ou_var = tk.StringVar(value=profile.get("default_ou", ""))
+        for row, label, variable in (
+            (0, "Company name", name_var), (1, "Domain", domain_var), (2, "Default OU", ou_var),
+        ):
+            ttk.Label(form, text=label).grid(row=row, column=0, sticky="w", padx=(0, 12), pady=5)
+            entry = ttk.Entry(form, textvariable=variable, width=48)
+            entry.grid(row=row, column=1, sticky="ew", pady=5)
+            if row == 0 and name is not None:
+                entry.configure(state="readonly")
+        text_fields = {}
+        for row, label, key in ((3, "Printers (one per line)", "printers"), (4, "Drives (one per line)", "drives")):
+            ttk.Label(form, text=label).grid(row=row, column=0, sticky="nw", padx=(0, 12), pady=5)
+            field = tk.Text(form, height=3, width=48)
+            field.insert("1.0", "\n".join(profile.get(key, [])))
+            field.grid(row=row, column=1, sticky="ew", pady=5)
+            text_fields[key] = field
+
+        def save():
+            candidate = dict(profile)
+            candidate["domain"] = domain_var.get().strip()
+            candidate["default_ou"] = ou_var.get().strip()
+            for key, field in text_fields.items():
+                candidate[key] = [line.strip() for line in field.get("1.0", "end-1c").splitlines() if line.strip()]
+            try:
+                if name is None:
+                    updated = add_company_profile(self.company_profiles, name_var.get(), candidate)
+                else:
+                    updated = dict(self.company_profiles)
+                    updated[name] = candidate
+            except CompanyProfileError as error:
+                messagebox.showerror("Invalid profile", str(error), parent=dialog)
+                return
+            if self._save_company_profiles(updated, dialog):
+                dialog.destroy()
+                self.show_page("Company Profiles")
+
+        ttk.Button(form, text="Save", command=save).grid(row=5, column=1, sticky="e", pady=(10, 0))
+        ttk.Button(form, text="Cancel", command=dialog.destroy).grid(row=5, column=0, sticky="w", pady=(10, 0))
+
+    def clone_company_profile(self):
+        selected = self.profile_selection.get()
+        name = simpledialog.askstring("Clone company profile", "Name for the new profile:", parent=self.root)
+        if name is None:
+            return
+        try:
+            updated = add_company_profile(self.company_profiles, name, copy.deepcopy(self.company_profiles[selected]))
+        except CompanyProfileError as error:
+            messagebox.showerror("Cannot clone profile", str(error), parent=self.root)
+            return
+        if self._save_company_profiles(updated):
+            self.show_page("Company Profiles")
+
+    def switch_company_profile(self):
+        name = self.profile_selection.get()
+        try:
+            save_active_profile(name, self.company_profiles)
+        except CompanyProfileError as error:
+            messagebox.showerror("Cannot switch profile", str(error), parent=self.root)
+            return
+        self.active_company = name
+        self.company_active_error = None
+        if hasattr(self, "autologon_company"):
+            self.autologon_company.set(name)
+        if hasattr(self, "wizard_values"):
+            self.wizard_values["Company"] = name
+        self.show_page("Company Profiles")
+
+    def export_company_profile_dialog(self, backup):
+        name = self.profile_selection.get()
+        path = filedialog.asksaveasfilename(
+            title="Back up profile" if backup else "Export profile",
+            defaultextension=".tgprofile",
+            initialfile="TrustGate-profile-backup.tgprofile" if backup else "TrustGate-profile.tgprofile",
+            filetypes=(("Encrypted TrustGate profile", "*.tgprofile"),),
+        )
+        if not path:
+            return
+        passphrase = simpledialog.askstring(
+            "Encrypt profile", "Enter a passphrase of at least 12 characters:", show="*", parent=self.root,
+        )
+        if passphrase is None:
+            return
+        confirmation = simpledialog.askstring(
+            "Encrypt profile", "Confirm the passphrase:", show="*", parent=self.root,
+        )
+        if confirmation is None:
+            return
+        if passphrase != confirmation:
+            messagebox.showerror("Passphrases do not match", "The profile was not saved.", parent=self.root)
+            return
+        try:
+            export_company_profile(path, name, self.company_profiles[name], passphrase)
+        except CompanyProfileError as error:
+            messagebox.showerror("Could not export profile", str(error), parent=self.root)
+            return
+        messagebox.showinfo("Profile saved", "The encrypted profile was saved. Keep the passphrase safe.", parent=self.root)
+
+    def import_company_profile_dialog(self):
+        path = filedialog.askopenfilename(
+            title="Import company profile",
+            filetypes=(("TrustGate profile", "*.tgprofile *.json"), ("All files", "*.*")),
+        )
+        if not path:
+            return
+        passphrase = simpledialog.askstring(
+            "Import profile", "Enter the passphrase, or leave blank for an unencrypted profile JSON:",
+            show="*", parent=self.root,
+        )
+        if passphrase is None:
+            return
+        try:
+            name, profile = import_company_profile(path, passphrase)
+            if any(existing.casefold() == name.casefold() for existing in self.company_profiles):
+                name = simpledialog.askstring(
+                    "Profile already exists", "Enter a new name for the imported profile:", parent=self.root,
+                )
+                if name is None:
+                    return
+            updated = add_company_profile(self.company_profiles, name, profile)
+        except CompanyProfileError as error:
+            messagebox.showerror("Could not import profile", str(error), parent=self.root)
+            return
+        if self._save_company_profiles(updated):
+            self.show_page("Company Profiles")
 
     def auto_logon_page(self):
         tk.Label(
@@ -561,7 +768,7 @@ class TrustGateApp:
         form.columnconfigure(1, weight=1)
 
         if not hasattr(self, "autologon_company"):
-            self.autologon_company = tk.StringVar(value=next(iter(self.company_profiles), "Custom"))
+            self.autologon_company = tk.StringVar(value=self.active_company or next(iter(self.company_profiles), "Custom"))
             self.autologon_username = tk.StringVar()
             self.autologon_domain = tk.StringVar()
             self.autologon_password = tk.StringVar()
@@ -748,7 +955,7 @@ class TrustGateApp:
             "Printers", "Validation", "Report",
         )
         self.wizard_step = 0
-        self.wizard_values = {"Company": next(iter(self.company_profiles), "Custom")}
+        self.wizard_values = {"Company": self.active_company or next(iter(self.company_profiles), "Custom")}
         self.show_page("Deployment Wizard")
 
     def deployment_wizard_page(self):
