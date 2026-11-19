@@ -1,0 +1,21 @@
+PRINTER REQUEST
+
+Computer Name: {computer_name}
+User Name: {user_name}
+Location: {location}
+Department: {department}
+
+Printer Required:
+{printer_type}
+
+Reason:
+{reason}
+
+Printer Team Contact: {printer_team_contact}
+
+Requested By:
+{requested_by}
+{requested_by_title}
+
+Date:
+{date}

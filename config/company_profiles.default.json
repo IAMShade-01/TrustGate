@@ -1,0 +1,14 @@
+{
+  "Example Company": {
+    "domain": "EXAMPLE",
+    "default_ou": "",
+    "printers": [],
+    "drives": []
+  },
+  "Custom": {
+    "domain": "",
+    "default_ou": "",
+    "printers": [],
+    "drives": []
+  }
+}

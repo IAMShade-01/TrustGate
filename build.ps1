@@ -27,6 +27,8 @@ if ($LASTEXITCODE -ne 0) {
     --workpath (Join-Path $Root "build") `
     --specpath $Root `
     --paths (Join-Path $Root "src") `
+    --add-data "$Root\config\company_profiles.default.json;config" `
+    --add-data "$Root\config\printer_request_template.txt;config" `
     --collect-all keyring `
     --collect-all cryptography `
     (Join-Path $Root "src\app.py")
