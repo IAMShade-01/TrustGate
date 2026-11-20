@@ -1,0 +1,21 @@
+{
+  "name": "trustgate-enterprise-desktop",
+  "version": "0.2.0",
+  "private": true,
+  "description": "TrustGate Enterprise desktop client",
+  "author": "TrustGate",
+  "main": "main.cjs",
+  "scripts": {
+    "build": "npm --prefix ../web run build:desktop",
+    "start": "npm run build && electron .",
+    "test": "node --test winget.test.cjs",
+    "package:win": "npm run build && electron-builder --config electron-builder.config.cjs --win --x64 --publish never"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
+  },
+  "devDependencies": {
+    "electron": "45.4.1",
+    "electron-builder": "26.18.0"
+  }
+}

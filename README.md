@@ -1,5 +1,49 @@
 # TrustGate
 
+## TrustGate Enterprise for Windows
+
+The [Electron desktop client](./portal/desktop) runs local winget searches, version lookups, installs, upgrades, and uninstalls. Copy an exact package ID from the search results, optionally select a version, and approve the native confirmation to queue a change. Operations run one at a time under your Windows account and may request administrator approval. Winget requires Microsoft App Installer with its `winget.exe` app execution alias enabled. Closing the window keeps the queue running in the system tray; queue history resets on exit, while operation metadata remains in the rotating local log available in **Settings → Open logs**.
+
+The .NET 10 API remains a separate service. Set `TRUSTGATE_PORTAL_URL` to the hosted portal's HTTPS URL before starting Electron. **Open enterprise portal** opens it in your default browser for Entra sign-in and tenant-scoped workflows. Local winget jobs are separate from tenant requests and are not controlled by Entra roles. Computer Rename is preview-only. Chocolatey, MSI/EXE execution, and the remaining Windows management modules are not implemented in this release.
+
+On Windows x64 with Node.js 24:
+
+```powershell
+npm.cmd --prefix portal\web ci
+npm.cmd --prefix portal\desktop ci
+npm.cmd --prefix portal\desktop test
+npm.cmd --prefix portal\desktop start
+npm.cmd --prefix portal\desktop run package:win
+```
+
+The last command builds an NSIS installer and portable ZIP in `portal\desktop\dist`. Neither requires Node.js or .NET to run the desktop client. For a test build, run the installer or extract the entire ZIP and open **TrustGate Enterprise.exe**.
+
+Test builds are unsigned, with updates disabled. To build for a managed release, configure Authenticode signing in electron-builder, set `TRUSTGATE_UPDATE_FEED` to your HTTPS generic feed, and set `TRUSTGATE_UPDATE_PUBLISHER` to the signing certificate's publisher name. The feed build requires signing. Publish the generated `latest.yml`, installer, and blockmap to that feed; users can check for updates and apply a downloaded update from Settings. The signed release path requires separate validation with your certificate and feed.
+
+## Enterprise portal foundation
+
+The [enterprise portal](./portal) is separate from the Windows desktop app. The React/TypeScript/Tailwind dashboard browses a tenant's device inventory and versioned software catalog, records requests, and shows recent history. A recorded request is **not queued or executed**. Intune, SCCM/MECM, AD, Graph, winget, Chocolatey, PowerShell, and the other enterprise execution modules are not connected in this portal.
+
+### Identity and data requirements
+
+- Use .NET 10 LTS, Node.js 24, and SQL Server. In each authorized Microsoft Entra tenant, provision the API and SPA app registrations or their enterprise applications. Configure the API for v2 access tokens, expose `api://<api-client-id>/Deployments.Access` as a delegated scope, and grant the SPA consent. Register the actual SPA **origin** as a SPA redirect URI. Assign users or groups the API app role `Deployment.Reader` or `Deployment.Operator`. Enforce MFA with Conditional Access in Entra; the portal does not implement its own MFA flow.
+- Supply `Entra__ApiClientId`, `Entra__Tenants` (comma-separated authorized tenant GUIDs), and `ConnectionStrings__Sql` to the API. Supply `VITE_ENTRA_TENANT_ID`, `VITE_ENTRA_SPA_CLIENT_ID`, and `VITE_ENTRA_API_CLIENT_ID` to the web build. The API supports multiple allowlisted tenants; each SPA build signs into one of them. These IDs are not credentials. Keep database credentials out of Git and build arguments.
+- Apply the [EF Core migrations](./portal/api/Migrations) using a separate migration identity. With `dotnet-ef` 10.0 installed, run `dotnet ef migrations script --idempotent --project portal/api` to generate SQL for review and deployment. Use [sample-data.sql](./portal/db/sample-data.sql) only against a development database, replacing the `TenantId` SQLCMD variable with your development tenant GUID. Inventory and catalog data are currently provisioned through SQL, not through an admin UI.
+- Keys and foreign keys include the tenant ID. The API uses the verified token's tenant and actor rather than client-supplied identity. It writes the request and its audit event in one database save. Give the runtime database identity only required reads and inserts; reserve schema changes and catalog writes for separate identities. Protect audit retention and backups separately.
+
+| API | Access |
+| --- | --- |
+| `GET /health/live` | Unauthenticated process liveness only |
+| `GET /api/session`, `GET /api/devices`, `GET /api/catalog`, `GET /api/deployments` | Reader or Operator |
+| `POST /api/deployments` (`deviceId`, `softwareId`) | Operator; records without executing |
+| `GET /api/audit` | Operator; recent tenant audit events |
+
+### Run and deploy
+
+For development, start the API with `dotnet run --project portal/api -- --urls http://127.0.0.1:5080`; in `portal/web`, use `npm ci` then `npm run dev`. Register `http://localhost:5173` for local Entra testing and open that origin. Run `dotnet test portal/tests` and, from `portal/web`, `npm test` and `npm run build`.
+
+The [Dockerfile](./portal/Dockerfile) serves the frontend and API on the same origin. Build from `portal` as the context, passing the three `VITE_ENTRA_*` values as `--build-arg` options. Supply the API variables at runtime. Before exposing the container on any network, place it behind an HTTPS ingress or reverse proxy, use SQL Server TLS with certificate validation, enable database/backup encryption at rest, and configure health monitoring. These controls are deployment requirements, not automatic guarantees of the image. Live Entra sign-in and SQL Server deployment must be verified in your environment. Redis, Electron, Kubernetes manifests, and Azure/on-prem production infrastructure are not part of this first slice.
+
 ## Employee Auto Login
 
 The separate employee auto-login project is in [employee-auto-login](employee-auto-login/README.md). Its PowerShell scripts require Windows and PowerShell 5.1 or later; review its deployment and security documentation before use.

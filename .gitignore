@@ -5,3 +5,9 @@ __pycache__/
 *.py[cod]
 *.spec
 /config/company_profiles.json
+/portal/**/bin/
+/portal/**/obj/
+/portal/web/node_modules/
+/portal/web/.env*
+/portal/desktop/node_modules/
+/portal/desktop/ui/
