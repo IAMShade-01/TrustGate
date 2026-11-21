@@ -104,3 +104,19 @@ flowchart TD
     R --> ID
     ID --> A
 ```
+
+## Current implementation boundaries
+
+TrustGate is an actively developed project with distinct local Windows tooling and an enterprise portal foundation. The current capabilities should be understood in these separate scopes:
+
+| Area | Current status |
+| --- | --- |
+| Windows desktop software management | WinGet search, version lookup, install, upgrade, and uninstall workflows with confirmation and local operation logging |
+| Enterprise portal | React/TypeScript interface with tenant-scoped device/catalog views and request history |
+| Portal deployment requests | Requests are recorded and audited; they are **not** sent to an execution queue and do not install software |
+| Microsoft Entra ID | Authentication and tenant authorization are part of the portal architecture and require environment-specific app registration and configuration before use |
+| Intune, SCCM/MECM, Active Directory, Microsoft Graph, Chocolatey, and centralized PowerShell execution | Listed as future integration areas; not connected as portal execution backends in this release |
+| Computer rename, domain join, AutoLogon, and other provisioning previews | Preview and validation workflows only; they do not apply those system changes |
+
+The desktop WinGet workflow is separate from the portal's Entra-protected request workflow. A successful local package installation does not imply that a portal request was executed, and a portal request record does not trigger a local installation.
+
