@@ -71,3 +71,36 @@ Export and backup both save a single passphrase-encrypted `.tgprofile` file usin
 ## Deployment UI Preview
 
 The dashboard includes a preview-only AutoLogon Manager, company presets, computer-name validation, a deployment wizard, and local JSON preview-report export. Generic presets are bundled from `config/company_profiles.default.json`. To use private company settings, place a JSON file in `%LOCALAPPDATA%\TrustGate\company_profiles.json`; it takes precedence over the bundled presets. When running from source, an untracked `config/company_profiles.json` is also supported if no per-user file exists. Neither private file is included in the executable. The preview workflow does not change Windows AutoLogon settings, join a domain, reset directory passwords, rename the computer, or deploy software, printers, or drives. The separate Software Deployment page can install Windows packages as described above. AutoLogon passwords are not saved or included in audit events or reports.
+
+
+## System Architecture
+
+The following diagram illustrates the current TrustGate architecture, including the Windows desktop client, enterprise portal, API, database, and Microsoft Entra ID integration.
+
+```mermaid
+flowchart TD
+    U[IT Administrator]
+
+    subgraph Desktop["Windows Desktop Client"]
+        E[Electron Application]
+        W[WinGet Integration]
+        L[Local Logs and Queue]
+        E --> W
+        E --> L
+    end
+
+    subgraph Portal["Enterprise Portal"]
+        R[React and TypeScript]
+        A[.NET 10 API]
+        D[(SQL Server)]
+        R --> A
+        A --> D
+    end
+
+    ID[Microsoft Entra ID]
+
+    U --> E
+    U --> R
+    R --> ID
+    ID --> A
+```
