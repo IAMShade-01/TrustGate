@@ -75,7 +75,12 @@ The dashboard includes a preview-only AutoLogon Manager, company presets, comput
 
 ## System Architecture
 
-The following diagram illustrates the current TrustGate architecture, including the Windows desktop client, enterprise portal, API, database, and Microsoft Entra ID integration.
+The diagram below shows the current separation between the local Windows desktop client and the enterprise portal. The portal's Entra-protected API records tenant-scoped requests; it does not execute them. The desktop client's WinGet workflow runs locally and is separate from portal authorization.
+
+![TrustGate system architecture](docs/images/trustgate-architecture.svg)
+
+<details>
+<summary>View architecture source (Mermaid)</summary>
 
 ```mermaid
 flowchart TD
@@ -105,6 +110,8 @@ flowchart TD
     ID --> A
 ```
 
+</details>
+
 ## Current implementation boundaries
 
 TrustGate is an actively developed project with distinct local Windows tooling and an enterprise portal foundation. The current capabilities should be understood in these separate scopes:
@@ -123,6 +130,5 @@ The desktop WinGet workflow is separate from the portal's Entra-protected reques
 
 ## Screenshots
 
-Product screenshots are being prepared for this repository. The gallery will be added once the optimized image assets are committed under `docs/images/`.
+The optimized screenshot files are prepared locally, but the image assets have not yet been uploaded to this repository. The gallery will appear here after those binary files are committed under `docs/images/`.
 
-The current UI should be interpreted with the implementation boundaries documented above: the portal records deployment requests but does not execute them, and integrations shown as available are not necessarily connected in a given environment.
