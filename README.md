@@ -130,5 +130,13 @@ The desktop WinGet workflow is separate from the portal's Entra-protected reques
 
 ## Screenshots
 
-The optimized screenshot files are prepared locally, but the image assets have not yet been uploaded to this repository. The gallery will appear here after those binary files are committed under `docs/images/`.
+### Application screenshots
+
+These are photographs of the running Windows application, cropped and optimized for the repository.
+
+| TrustGate Enterprise dashboard | Desktop application shortcut |
+| --- | --- |
+| ![TrustGate Enterprise dashboard](docs/images/trustgate-dashboard.jpg) | ![TrustGate desktop application icon](docs/images/trustgate-desktop-app-icon.jpg) |
+
+The dashboard is an early-stage interface; the current counters show zero jobs. The desktop screenshot highlights the installed TrustGate application.
 
