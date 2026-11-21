@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
+<title id="title">TrustGate system architecture</title>
+<desc id="desc">An IT administrator uses a Windows desktop client with local WinGet integration and logs, and a separate enterprise portal built with React and TypeScript. The portal authenticates through Microsoft Entra ID and calls a .NET 10 API backed by SQL Server. Portal requests are recorded and audited, not executed.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1220"/><stop offset="1" stop-color="#172554"/></linearGradient>
+  <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#1e40af"/></linearGradient>
+  <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f766e"/><stop offset="1" stop-color="#115e59"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#020617" flood-opacity=".35"/></filter>
+  <marker id="arrow" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M0 0L12 6L0 12Z" fill="#94a3b8"/></marker>
+  <style>
+    .h{font:700 30px Arial,sans-serif;fill:#f8fafc}.sub{font:400 17px Arial,sans-serif;fill:#cbd5e1}
+    .section{font:700 21px Arial,sans-serif;fill:#e2e8f0}.node{font:700 20px Arial,sans-serif;fill:#fff}
+    .small{font:400 15px Arial,sans-serif;fill:#dbeafe}.line{stroke:#94a3b8;stroke-width:3;fill:none;marker-end:url(#arrow)}
+    .note{font:400 16px Arial,sans-serif;fill:#cbd5e1}
+  </style>
+</defs>
+<rect width="1400" height="860" rx="28" fill="url(#bg)"/>
+<text x="70" y="72" class="h">TrustGate · System Architecture</text>
+<text x="70" y="105" class="sub">Current implementation · Local Windows tooling and enterprise portal are separate workflows</text>
+<g filter="url(#shadow)">
+  <rect x="520" y="145" width="360" height="76" rx="16" fill="#334155" stroke="#64748b" stroke-width="2"/>
+  <text x="700" y="191" text-anchor="middle" class="node">IT Administrator</text>
+</g>
+<path class="line" d="M610 221V278H345V330"/>
+<path class="line" d="M790 221V278H1050V330"/>
+<g filter="url(#shadow)">
+  <rect x="70" y="330" width="550" height="360" rx="22" fill="#0f172a" stroke="#3b82f6" stroke-width="3"/>
+  <text x="105" y="375" class="section">Windows Desktop Client</text>
+  <rect x="145" y="425" width="400" height="82" rx="14" fill="url(#blue)"/>
+  <text x="345" y="474" text-anchor="middle" class="node">Electron Application</text>
+  <path class="line" d="M275 507V548H210V575"/>
+  <path class="line" d="M415 507V548H480V575"/>
+  <rect x="110" y="580" width="205" height="72" rx="12" fill="#1e3a8a" stroke="#60a5fa"/>
+  <text x="212" y="610" text-anchor="middle" class="node" style="font-size:17px">WinGet</text>
+  <text x="212" y="634" text-anchor="middle" class="small">Local package workflow</text>
+  <rect x="365" y="580" width="220" height="72" rx="12" fill="#1e3a8a" stroke="#60a5fa"/>
+  <text x="475" y="610" text-anchor="middle" class="node" style="font-size:17px">Local logs &amp; queue</text>
+  <text x="475" y="634" text-anchor="middle" class="small">Runs under Windows user</text>
+</g>
+<g filter="url(#shadow)">
+  <rect x="780" y="330" width="550" height="360" rx="22" fill="#0f172a" stroke="#14b8a6" stroke-width="3"/>
+  <text x="815" y="375" class="section">Enterprise Portal</text>
+  <rect x="850" y="415" width="410" height="66" rx="14" fill="url(#teal)"/>
+  <text x="1055" y="455" text-anchor="middle" class="node">React + TypeScript</text>
+  <path class="line" d="M1055 481V520"/>
+  <rect x="850" y="525" width="410" height="66" rx="14" fill="#155e75" stroke="#22d3ee"/>
+  <text x="1055" y="565" text-anchor="middle" class="node">.NET 10 API</text>
+  <path class="line" d="M1055 591V625"/>
+  <rect x="900" y="630" width="310" height="48" rx="10" fill="#164e63" stroke="#67e8f9"/>
+  <text x="1055" y="661" text-anchor="middle" class="node" style="font-size:17px">SQL Server · tenant-scoped data</text>
+</g>
+<g filter="url(#shadow)">
+  <rect x="850" y="235" width="410" height="62" rx="14" fill="#4c1d95" stroke="#a78bfa" stroke-width="2"/>
+  <text x="1055" y="273" text-anchor="middle" class="node">Microsoft Entra ID</text>
+</g>
+<path class="line" d="M1055 297V410"/>
+<text x="700" y="755" text-anchor="middle" class="note">Portal requests are recorded and audited — they are not queued for execution.</text>
+<text x="700" y="785" text-anchor="middle" class="note">The desktop WinGet workflow is independent of portal Entra authorization.</text>
+</svg>
