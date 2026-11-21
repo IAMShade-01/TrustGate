@@ -120,24 +120,9 @@ TrustGate is an actively developed project with distinct local Windows tooling a
 
 The desktop WinGet workflow is separate from the portal's Entra-protected request workflow. A successful local package installation does not imply that a portal request was executed, and a portal request record does not trigger a local installation.
 
+
 ## Screenshots
 
-The screenshots below show the current Windows desktop application and enterprise portal UI. They are captured from a local development/test environment.
+Product screenshots are being prepared for this repository. The gallery will be added once the optimized image assets are committed under `docs/images/`.
 
-> **Environment note:** The enterprise portal currently displays an Entra ID configuration notice when the tenant settings are not supplied. Integration availability shown in the portal is informational; it does not mean Intune, SCCM/MECM, Active Directory, Microsoft Graph, Chocolatey, or PowerShell execution is connected. The portal records deployment requests but does not execute them. The Windows desktop client's separate WinGet workflow is the currently implemented package-install path.
-
-### Enterprise dashboard
-
-![TrustGate Enterprise dashboard](docs/images/enterprise-dashboard.jpg)
-
-### Software deployment page
-
-![TrustGate software deployment page](docs/images/enterprise-software-deployment.jpg)
-
-### Windows installation and app discovery
-
-![TrustGate installer context menu](docs/images/installer-context-menu.jpg)
-
-![TrustGate app in Windows Search](docs/images/windows-search-result.jpg)
-
-![TrustGate desktop shortcut](docs/images/desktop-shortcut.jpg)
+The current UI should be interpreted with the implementation boundaries documented above: the portal records deployment requests but does not execute them, and integrations shown as available are not necessarily connected in a given environment.
