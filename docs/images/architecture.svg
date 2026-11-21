@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b1220"/><stop offset="1" stop-color="#172b4d"/></linearGradient><linearGradient id="card" x2="0" y2="1"><stop stop-color="#1e3a5f"/><stop offset="1" stop-color="#14243b"/></linearGradient><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#67d5ff"/></marker></defs>
+<rect width="1400" height="820" rx="28" fill="url(#bg)"/>
+<text x="700" y="70" fill="#fff" font-family="Arial,sans-serif" font-size="34" font-weight="700" text-anchor="middle">TrustGate — Current System Architecture</text>
+<text x="700" y="108" fill="#a9c1df" font-family="Arial,sans-serif" font-size="17" text-anchor="middle">Separate local Windows tooling and Entra-protected enterprise portal</text>
+<rect x="555" y="145" width="290" height="72" rx="14" fill="#233e64" stroke="#67d5ff" stroke-width="2"/><text x="700" y="188" fill="#fff" font-family="Arial" font-size="22" text-anchor="middle">IT Administrator</text>
+<rect x="70" y="275" width="570" height="390" rx="20" fill="#111f33" stroke="#4f8bc9" stroke-width="2"/><text x="355" y="320" fill="#9bdcff" font-family="Arial" font-size="26" font-weight="700" text-anchor="middle">Windows Desktop Client</text>
+<rect x="180" y="370" width="350" height="80" rx="12" fill="url(#card)" stroke="#67d5ff"/><text x="355" y="418" fill="#fff" font-family="Arial" font-size="22" text-anchor="middle">Electron Application</text>
+<rect x="115" y="520" width="220" height="85" rx="12" fill="url(#card)" stroke="#67d5ff"/><text x="225" y="570" fill="#fff" font-family="Arial" font-size="21" text-anchor="middle">WinGet</text><text x="225" y="594" fill="#b6cce2" font-family="Arial" font-size="15" text-anchor="middle">Local package workflow</text>
+<rect x="375" y="520" width="220" height="85" rx="12" fill="url(#card)" stroke="#67d5ff"/><text x="485" y="570" fill="#fff" font-family="Arial" font-size="21" text-anchor="middle">Local Logs</text><text x="485" y="594" fill="#b6cce2" font-family="Arial" font-size="15" text-anchor="middle">Queue and operation metadata</text>
+<rect x="760" y="275" width="570" height="390" rx="20" fill="#111f33" stroke="#4f8bc9" stroke-width="2"/><text x="1045" y="320" fill="#9bdcff" font-family="Arial" font-size="26" font-weight="700" text-anchor="middle">Enterprise Portal</text>
+<rect x="875" y="365" width="340" height="72" rx="12" fill="url(#card)" stroke="#67d5ff"/><text x="1045" y="410" fill="#fff" font-family="Arial" font-size="22" text-anchor="middle">React + TypeScript</text>
+<rect x="875" y="490" width="340" height="72" rx="12" fill="url(#card)" stroke="#67d5ff"/><text x="1045" y="535" fill="#fff" font-family="Arial" font-size="22" text-anchor="middle">.NET 10 API</text>
+<rect x="810" y="590" width="210" height="55" rx="10" fill="#233e64" stroke="#67d5ff"/><text x="915" y="625" fill="#fff" font-family="Arial" font-size="18" text-anchor="middle">Microsoft Entra ID</text>
+<rect x="1100" y="590" width="190" height="55" rx="10" fill="#233e64" stroke="#67d5ff"/><text x="1195" y="625" fill="#fff" font-family="Arial" font-size="18" text-anchor="middle">SQL Server</text>
+<g fill="none" stroke="#67d5ff" stroke-width="3" marker-end="url(#arr)"><path d="M650 217 L355 217 L355 365"/><path d="M750 217 L1045 217 L1045 360"/><path d="M355 450 L355 515"/><path d="M1045 437 L1045 485"/><path d="M1045 562 L1045 585"/><path d="M1215 526 L1245 526 L1245 585"/></g>
+<text x="700" y="735" fill="#ffd27a" font-family="Arial" font-size="18" text-anchor="middle">Important: Portal requests are recorded and audited; they do not trigger deployment execution.</text>
+<text x="700" y="770" fill="#a9c1df" font-family="Arial" font-size="16" text-anchor="middle">The desktop WinGet workflow is separate from the portal's tenant-scoped request workflow.</text>
+</svg>
